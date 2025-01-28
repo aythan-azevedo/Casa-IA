@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat OpenAI</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        input, button { margin: 10px; padding: 10px; }
+        #chat { margin-top: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .user { background: #d1e7dd; text-align: right; }
+        .bot { background: #f8d7da; text-align: left; }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Chat com OpenAI</h1>
+    <input type="text" id="question" placeholder="Digite sua pergunta..." />
+    <button onclick="sendMessage()">Enviar</button>
+    <div id="chat"></div>
+
+    <script>
+        const chatHistory = []; // Armazena mensagens no JSON dentro do código
+
+        async function sendMessage() {
+            const apiKey = "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"; // ⚠️ Sua chave fica visível aqui!
+            const question = document.getElementById("question").value;
+            if (!question) return;
+
+            // Adiciona a pergunta ao histórico
+            chatHistory.push({ role: "user", content: question });
+            updateChat();
+
+            try {
+                const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4",
+                        messages: chatHistory
+                    })
+                });
+
+                const data = await res.json();
+                const botResponse = data.choices[0].message.content;
+
+                // Adiciona a resposta ao histórico
+                chatHistory.push({ role: "bot", content: botResponse });
+                updateChat();
+            } catch (error) {
+                console.error("Erro:", error);
+            }
+
+            document.getElementById("question").value = "";
+        }
+
+        function updateChat() {
+            const chatDiv = document.getElementById("chat");
+            chatDiv.innerHTML = ""; // Limpa o chat para reescrever
+
+            chatHistory.forEach(msg => {
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message", msg.role === "user" ? "user" : "bot");
+                messageDiv.innerText = msg.content;
+                chatDiv.appendChild(messageDiv);
+            });
+        }
+    </script>
+</body>
+</html>
